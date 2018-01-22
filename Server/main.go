@@ -39,6 +39,11 @@ func handleConnection(conn net.Conn) {
 		return
 	}
 
+	if connection.Name == "" || connection.Email == "" {
+		log.Printf("Invalid login credentials.\n")
+		return
+	}
+
 	user := message.User{
 		UUID:  message.NextUUID,
 		Name:  connection.Name,
@@ -53,6 +58,7 @@ func handleConnection(conn net.Conn) {
 		var msg message.Message
 		// Read in a new message as JSON and map it to a Message object
 		err := decoder.Decode(&msg)
+		log.Printf("New message!\n")
 		if err != nil {
 			log.Printf("Decoding message error: %v\n", err)
 			delete(message.Clients, conn)
