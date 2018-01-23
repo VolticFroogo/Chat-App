@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Windows.Forms;
@@ -17,7 +18,7 @@ namespace Chat_App
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new Login());
         }
     }
 
@@ -38,6 +39,12 @@ namespace Chat_App
             {
                 public int Type { get; set; } // Type of message
                 public string Message { get; set; } // The actual message
+            }
+
+            public enum ID {
+                message,
+                connected,
+                disconnected,
             }
         }
 
@@ -62,7 +69,7 @@ namespace Chat_App
 
         public static void ReadBroadcasts()
         {
-            while(true)
+            while (true)
             {
                 Byte[] data = new Byte[1024];
                 Int32 bytes = stream.Read(data, 0, data.Length);
@@ -71,21 +78,51 @@ namespace Chat_App
 
                 JObject msg = (JObject)JsonConvert.DeserializeObject(messageJSON);
 
-                string message = msg["user"] + ": " + msg["message"];
-                Form1.AddMessage(message);
+                switch(msg["type"].ToObject<int>())
+                {
+                    case (int) Type.ID.message:
+                        string message = msg["user"] + ": " + msg["message"];
+                        Chat.AddMessage(message);
+                        break;
+
+                    case (int) Type.ID.connected:
+                        message = msg["user"] + " has connected!";
+                        Chat.AddMessage(message);
+                        break;
+
+                    case (int)Type.ID.disconnected:
+                        message = msg["user"] + " has disconnected.";
+                        Chat.AddMessage(message);
+                        break;
+                }
             }
         }
 
-        public static void ConnectToServer()
+        public static bool RecieveSuccess()
+        {
+            Byte[] data = new Byte[32];
+            Int32 bytes = stream.Read(data, 0, data.Length);
+
+            string messageJSON = Encoding.ASCII.GetString(data);
+
+            JObject msg = (JObject)JsonConvert.DeserializeObject(messageJSON);
+
+            return msg["success"].ToObject<bool>();
+        }
+
+        public static bool ConnectToServer()
         {
             try
             {
+                // Get server IP from DNS
+                var address = Dns.GetHostAddresses("chat.froogo.co.uk")[0];
+
                 // Create a TCP Client.
-                client = new TcpClient("localhost", 3737);
+                client = new TcpClient(address.ToString(), 3737);
 
                 // Get a client stream for reading and writing.
                 stream = client.GetStream();
-                Login();
+                return true;
             }
             catch (ArgumentNullException e)
             {
@@ -95,15 +132,23 @@ namespace Chat_App
             {
                 Console.WriteLine("SocketException: {0}", e);
             }
+
+            return false;
         }
 
-        private static void Login()
+        public static void DisconnectFromServer()
+        {
+            stream.Close();
+            client.Close();
+        }
+
+        public static void Login(string name, string email)
         {
             // Declare message.
             Type.Connect loginInfo = new Type.Connect
             {
-                Name = "Froogo",
-                Email = "harry@froogo.co.uk"
+                Name = name,
+                Email = email
             };
 
             // Serialize message to JSON.

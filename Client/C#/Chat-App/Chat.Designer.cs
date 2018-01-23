@@ -1,6 +1,6 @@
 ﻿namespace Chat_App
 {
-    partial class Form1
+    partial class Chat
     {
         /// <summary>
         /// Required designer variable.
@@ -59,7 +59,7 @@
             this.SendButton.UseVisualStyleBackColor = true;
             this.SendButton.Click += new System.EventHandler(this.SendButton_Click);
             // 
-            // Form1
+            // Chat
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -67,12 +67,12 @@
             this.Controls.Add(this.SendButton);
             this.Controls.Add(ChatBox);
             this.Controls.Add(this.InputBox);
-            this.Name = "Form1";
+            this.Name = "Chat";
             this.Text = "Chat App | C# Client";
-            this.Load += new System.EventHandler(this.Form1_Load);
+            this.Load += new System.EventHandler(this.Chat_Load);
+            this.FormClosing += this.Chat_FormClosing;
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion

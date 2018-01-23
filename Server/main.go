@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"time"
 
 	"github.com/VolticFroogo/Chat-App/Server/message"
 )
@@ -30,21 +31,47 @@ func main() {
 }
 
 func handleConnection(conn net.Conn) {
-	connection := message.Connection{}
 	decoder := json.NewDecoder(conn)
-	err := decoder.Decode(&connection)
-	if err != nil {
-		log.Printf("Decoding connection message error: %v\n", err)
-		delete(message.Clients, conn)
+	user, success := handleLogin(decoder, conn)
+	if !success {
 		return
 	}
 
-	if connection.Name == "" || connection.Email == "" {
-		log.Printf("Invalid login credentials.\n")
-		return
+	for {
+		var msg message.Message
+		// Read in a new message as JSON and map it to a Message object
+		err := decoder.Decode(&msg)
+		if err != nil {
+			log.Printf("Decoding message error: %v\n", err)
+			delete(message.Clients, conn)
+			message.Connected(message.UserDisconnected, user.Name)
+			return
+		}
+		msg.User = user.Name
+		// Send the newly received message to the broadcast channel
+		message.Broadcast <- msg
+	}
+}
+
+func handleLogin(decoder *json.Decoder, conn net.Conn) (message.User, bool) {
+	connection := message.Connection{}
+	user := message.User{}
+	for {
+		err := decoder.Decode(&connection)
+		if err != nil {
+			log.Printf("Decoding connection message error: %v\n", err)
+			return user, false
+		}
+
+		if connection.Name == "" || connection.Email == "" {
+			log.Printf("Invalid login credentials.\n")
+			message.SendSuccessMessage(false, conn)
+		} else {
+			break
+		}
 	}
 
-	user := message.User{
+	user = message.User{
 		UUID:  message.NextUUID,
 		Name:  connection.Name,
 		Email: connection.Email,
@@ -52,20 +79,9 @@ func handleConnection(conn net.Conn) {
 	message.NextUUID++
 	message.Clients[conn] = user
 
-	log.Printf("Client in!\n")
+	message.SendSuccessMessage(true, conn)
+	time.Sleep(time.Second)
+	message.Connected(message.UserConnected, user.Name)
 
-	for {
-		var msg message.Message
-		// Read in a new message as JSON and map it to a Message object
-		err := decoder.Decode(&msg)
-		log.Printf("New message!\n")
-		if err != nil {
-			log.Printf("Decoding message error: %v\n", err)
-			delete(message.Clients, conn)
-			return
-		}
-		msg.User = user.Name
-		// Send the newly received message to the broadcast channel
-		message.Broadcast <- msg
-	}
+	return user, true
 }
