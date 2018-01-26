@@ -30,6 +30,24 @@ namespace Chat_App
             Message.DisconnectFromServer();
         }
 
+        private void UsernameTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                SubmitButton_Click(this, new EventArgs());
+            }
+        }
+
+        private void EmailTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                SubmitButton_Click(this, new EventArgs());
+            }
+        }
+
         private void SubmitButton_Click(object sender, EventArgs e)
         {
             if (!connectedToServer) return;

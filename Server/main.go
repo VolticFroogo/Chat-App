@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
-	"time"
+	"strings"
 
 	"github.com/VolticFroogo/Chat-App/Server/message"
 )
@@ -21,7 +21,6 @@ func main() {
 
 	for {
 		conn, err := ln.Accept() // This blocks until connection or error
-		log.Printf("Accepted new client!\n")
 		if err != nil {
 			log.Printf("Accepting client error: %v\n", err)
 		} else {
@@ -42,14 +41,26 @@ func handleConnection(conn net.Conn) {
 		// Read in a new message as JSON and map it to a Message object
 		err := decoder.Decode(&msg)
 		if err != nil {
+			if err.Error() == "EOF" {
+				delete(message.Clients, conn)
+				message.Connected(message.UserDisconnected, user.Name)
+				return
+			}
 			log.Printf("Decoding message error: %v\n", err)
 			delete(message.Clients, conn)
 			message.Connected(message.UserDisconnected, user.Name)
 			return
 		}
+		// Add the user's to message
 		msg.User = user.Name
-		// Send the newly received message to the broadcast channel
-		message.Broadcast <- msg
+
+		// Remove spaces to test for blank message
+		withoutSpaces := strings.Split(msg.Message, " ")
+		// Check if the message has contents
+		if strings.Join(withoutSpaces, "") != "" {
+			// Send the newly received message to the broadcast channel
+			message.Broadcast <- msg
+		}
 	}
 }
 
@@ -59,6 +70,9 @@ func handleLogin(decoder *json.Decoder, conn net.Conn) (message.User, bool) {
 	for {
 		err := decoder.Decode(&connection)
 		if err != nil {
+			if err.Error() == "EOF" {
+				return user, false
+			}
 			log.Printf("Decoding connection message error: %v\n", err)
 			return user, false
 		}
@@ -80,7 +94,6 @@ func handleLogin(decoder *json.Decoder, conn net.Conn) (message.User, bool) {
 	message.Clients[conn] = user
 
 	message.SendSuccessMessage(true, conn)
-	time.Sleep(time.Second)
 	message.Connected(message.UserConnected, user.Name)
 
 	return user, true

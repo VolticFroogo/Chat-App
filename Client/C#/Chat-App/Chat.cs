@@ -35,6 +35,24 @@ namespace Chat_App
             Message.DisconnectFromServer();
         }
 
+        private void InputBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                Message.Send(InputBox.Text);
+                InputBox.Text = "";
+            }
+        }
+
+        private void ChatBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+            }
+        }
+
         public static void AddMessage(string Message)
         {
             ChatBox.Invoke(new MethodInvoker(delegate {

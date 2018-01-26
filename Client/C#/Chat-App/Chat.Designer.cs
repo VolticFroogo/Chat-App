@@ -39,6 +39,8 @@
             this.InputBox.Name = "InputBox";
             this.InputBox.Size = new System.Drawing.Size(260, 20);
             this.InputBox.TabIndex = 0;
+            this.InputBox.KeyDown += InputBox_KeyDown;
+            this.InputBox.MaxLength = 256;
             // 
             // ChatBox
             // 
@@ -48,6 +50,7 @@
             ChatBox.Size = new System.Drawing.Size(260, 182);
             ChatBox.TabIndex = 1;
             ChatBox.Text = "";
+            ChatBox.KeyDown += ChatBox_KeyDown;
             // 
             // SendButton
             // 

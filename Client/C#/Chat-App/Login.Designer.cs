@@ -52,6 +52,8 @@
             this.UsernameTextBox.Name = "UsernameTextBox";
             this.UsernameTextBox.Size = new System.Drawing.Size(196, 20);
             this.UsernameTextBox.TabIndex = 1;
+            this.UsernameTextBox.KeyDown += UsernameTextBox_KeyDown;
+            this.UsernameTextBox.MaxLength = 32;
             // 
             // EmailTextBox
             // 
@@ -59,6 +61,8 @@
             this.EmailTextBox.Name = "EmailTextBox";
             this.EmailTextBox.Size = new System.Drawing.Size(196, 20);
             this.EmailTextBox.TabIndex = 2;
+            this.EmailTextBox.KeyDown += EmailTextBox_KeyDown;
+            this.EmailTextBox.MaxLength = 64;
             // 
             // UsernameLabel
             // 
@@ -104,7 +108,6 @@
             this.FormClosing += this.Login_FormClosing;
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
